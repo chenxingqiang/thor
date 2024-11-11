@@ -1,0 +1,81 @@
+// app/layout.tsx
+import './globals.css'
+import { Inter } from 'next/font/google'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata = {
+  title: '{{name}}',
+  description: '{{description}}'
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>{children}</body>
+    </html>
+  )
+}
+
+// app/page.tsx
+import Image from 'next/image'
+
+export default function Home() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
+        <h1 className="text-4xl font-bold">Welcome to {{name}}</h1>
+        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl lg:static lg:w-auto lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4">
+          Get started by editing&nbsp;
+          <code className="font-mono font-bold">app/page.tsx</code>
+        </p>
+      </div>
+    </main>
+  )
+}
+
+// lib/utils.ts
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+// components/ui/button.tsx
+import * as React from 'react'
+import { cn } from '@/lib/utils'
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'default' | 'primary' | 'secondary'
+  size?: 'small' | 'medium' | 'large'
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = 'default', size = 'medium', ...props }, ref) => {
+    return (
+      <button
+        ref={ref}
+        className={cn(
+          'inline-flex items-center justify-center rounded-md font-medium transition-colors',
+          variant === 'default' && 'bg-white text-gray-900 hover:bg-gray-50',
+          variant === 'primary' && 'bg-blue-600 text-white hover:bg-blue-700',
+          variant === 'secondary' && 'bg-gray-200 text-gray-900 hover:bg-gray-300',
+          size === 'small' && 'h-8 px-3 text-sm',
+          size === 'medium' && 'h-10 px-4',
+          size === 'large' && 'h-12 px-6 text-lg',
+          className
+        )}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = 'Button'
+
+export { Button }

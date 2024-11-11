@@ -1,0 +1,120 @@
+<!-- App.vue -->
+<template>
+  <div class="app">
+    <nav class="nav">
+      <router-link to="/" class="nav-link">Home</router-link>
+      <router-link to="/about" class="nav-link">About</router-link>
+    </nav>
+
+    <main class="main">
+      <router-view v-slot="{ Component }">
+        <transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; {{ new Date().getFullYear() }} {{name}}. All rights reserved.</p>
+    </footer>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const isLoading = ref(false)
+
+// Global error handler
+const handleError = (error: unknown) => {
+  console.error('Application error:', error)
+  // Add error reporting here
+}
+
+// Authentication guard
+router.beforeEach((to, from, next) => {
+  if (to.meta.requiresAuth) {
+    // Add auth check here
+    next('/login')
+  } else {
+    next()
+  }
+})
+</script>
+
+<style>
+.app {
+  @apply min-h-screen flex flex-col;
+}
+
+.nav {
+  @apply bg-white shadow px-4 py-2 flex items-center space-x-4;
+}
+
+.nav-link {
+  @apply text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium;
+}
+
+.nav-link.router-link-active {
+  @apply bg-gray-100 text-gray-900;
+}
+
+.main {
+  @apply flex-grow container mx-auto px-4 py-8;
+}
+
+.footer {
+  @apply bg-gray-100 py-4 text-center text-gray-600;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
+
+<!-- vite.config.ts -->
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import { fileURLToPath, URL } from 'url'
+
+export default defineConfig({
+  plugins: [vue()],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
+  },
+  server: {
+    port: 3000
+  },
+  build: {
+    target: 'esnext',
+    minify: 'terser'
+  }
+})
+
+<!-- main.ts -->
+import { createApp } from 'vue'
+import { createRouter, createWebHistory } from 'vue-router'
+import { createPinia } from 'pinia'
+import App from './App.vue'
+import './index.css'
+
+const app = createApp(App)
+const pinia = createPinia()
+const router = createRouter({
+  history: createWebHistory(),
+  routes: []
+})
+
+app.use(pinia)
+app.use(router)
+app.mount('#app')

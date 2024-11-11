@@ -1,0 +1,23 @@
+# 在.github/workflows/test.yml中添加测试工作流
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Install dependencies
+      run: make deps
+    
+    - name: Run tests
+      run: bash scripts/test.sh
+    
+    - name: Upload coverage
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage
+        path: coverage/

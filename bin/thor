@@ -1,0 +1,79 @@
+#!/bin/bash
+# Main executable file
+
+set -e
+
+VERSION="0.1.0"
+THOR_ROOT="$(dirname "$(dirname "$(realpath "$0")")")"
+source "${THOR_ROOT}/lib/core/config.sh"
+source "${THOR_ROOT}/lib/core/editor.sh"
+source "${THOR_ROOT}/lib/core/template.sh"
+source "${THOR_ROOT}/lib/core/utils.sh"
+
+# 命令行参数解析
+cmd_help() {
+    echo "Thor - Template Handler & Organizer v${VERSION}"
+    echo
+    echo "Usage:"
+    echo "  thor <command> [options]"
+    echo
+    echo "Commands:"
+    echo "  init      Initialize a new project from template"
+    echo "  create    Create file/directory with template"
+    echo "  template  Manage templates"
+    echo "  git       Git related utilities"
+    echo
+    echo "Options:"
+    echo "  -h, --help     Show this help message"
+    echo "  -v, --version  Show version information"
+    echo
+    echo "Run 'thor <command> --help' for more information on a command."
+}
+
+cmd_version() {
+    echo "thor version ${VERSION}"
+}
+
+main() {
+    # 加载配置
+    load_config
+
+    # 如果没有参数，显示帮助
+    if [ $# -eq 0 ]; then
+        cmd_help
+        exit 1
+    fi
+
+    # 解析命令
+    case "$1" in
+    init)
+        shift
+        thor-init "$@"
+        ;;
+    create)
+        shift
+        thor-create "$@"
+        ;;
+    template)
+        shift
+        thor-template "$@"
+        ;;
+    git)
+        shift
+        thor-git "$@"
+        ;;
+    -h | --help)
+        cmd_help
+        ;;
+    -v | --version)
+        cmd_version
+        ;;
+    *)
+        echo "Unknown command: $1"
+        echo "Run 'thor --help' for usage."
+        exit 1
+        ;;
+    esac
+}
+
+main "$@"

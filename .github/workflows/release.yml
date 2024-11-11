@@ -1,0 +1,60 @@
+# Release configuration
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      
+      - name: Set up environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bash jq git tree
+      
+      - name: Build project
+        run: make build
+      
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Thor ${{ github.ref }}
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false
+      
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/thor-${{ github.ref }}.tar.gz
+          asset_name: thor-${{ github.ref }}.tar.gz
+          asset_content_type: application/gzip
+      
+      - name: Update Homebrew formula
+        run: |
+          version="${GITHUB_REF#refs/tags/v}"
+          sha256=$(sha256sum dist/thor-${version}.tar.gz | cut -d' ' -f1)
+          
+          sed -i "s/version \".*\"/version \"${version}\"/" Formula/thor.rb
+          sed -i "s/sha256 \".*\"/sha256 \"${sha256}\"/" Formula/thor.rb
+          
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          
+          git add Formula/thor.rb
+          git commit -m "chore: update formula to version ${version}"
+          git push origin HEAD:main

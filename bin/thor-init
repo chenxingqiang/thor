@@ -1,0 +1,250 @@
+#!/usr/bin/env bash
+# Project initialization command
+
+source "${THOR_ROOT}/lib/core/config.sh"
+source "${THOR_ROOT}/lib/core/template.sh"
+source "${THOR_ROOT}/lib/core/utils.sh"
+
+show_init_help() {
+    echo "Usage: thor init [type] [name] [options] <directory>"
+    echo
+    echo "Initialize a new project from template"
+    echo
+    echo "Arguments:"
+    echo "  type         Template type (react, next, vue, etc.)"
+    echo "  name         Project name"
+    echo "  directory    Target directory"
+    echo
+    echo "Options:"
+    echo "  -t, --template <template>    Specify template (default: ${DEFAULT_TEMPLATE})"
+    echo "  -d, --desc <description>     Project description"
+    echo "  -a, --author <author>        Project author"
+    echo "  -l, --license <license>      Project license"
+    echo "  --git                        Initialize git repository"
+    echo "  --install                    Run package manager install"
+    echo "  --no-deps                    Skip dependency installation"
+    echo "  -f, --force                  Overwrite existing directory"
+    echo "  -y, --yes                    Skip confirmation"
+    echo
+    echo "Examples:"
+    echo "  thor init react my-app"
+    echo "  thor init next my-app --template typescript"
+    echo "  thor init vue my-app -d \"My awesome project\" --git"
+}
+
+# 收集项目信息
+collect_project_info() {
+    local name="$1"
+    local description="${2:-}"
+    local author="${3:-}"
+    local license="${4:-MIT}"
+
+    # 如果没有提供，交互式收集信息
+    if [ -z "$description" ]; then
+        read -p "Project description: " description
+    fi
+
+    if [ -z "$author" ]; then
+        # 尝试从git配置获取
+        author="$(git config user.name)"
+        if [ -z "$author" ]; then
+            read -p "Author name: " author
+        fi
+    fi
+
+    echo "name=$name"
+    echo "description=$description"
+    echo "author=$author"
+    echo "license=$license"
+}
+
+# 初始化git仓库
+init_git() {
+    local dir="$1"
+    local template_type="$2"
+    local template_name="$3"
+
+    (cd "$dir" && {
+        git init
+
+        # 应用gitignore模板
+        if apply_template "git" "${template_type}" "$dir"; then
+            echo "✅ Applied .gitignore template"
+        fi
+
+        git add .
+        git commit -m "Initial commit from thor template: ${template_type}/${template_name}"
+    })
+}
+
+# 安装依赖
+install_dependencies() {
+    local dir="$1"
+
+    (cd "$dir" && {
+        if [ -f "package.json" ]; then
+            if command -v pnpm >/dev/null 2>&1; then
+                echo "📦 Installing dependencies with pnpm..."
+                pnpm install
+            elif command -v yarn >/dev/null 2>&1; then
+                echo "📦 Installing dependencies with yarn..."
+                yarn
+            else
+                echo "📦 Installing dependencies with npm..."
+                npm install
+            fi
+        elif [ -f "composer.json" ]; then
+            echo "📦 Installing dependencies with composer..."
+            composer install
+        fi
+    })
+}
+
+main() {
+    local type=""
+    local name=""
+    local directory=""
+    local template="${DEFAULT_TEMPLATE}"
+    local description=""
+    local author=""
+    local license="MIT"
+    local init_git=false
+    local install=false
+    local force=false
+    local skip_confirm=false
+
+    # 解析参数
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+        -h | --help)
+            show_init_help
+            exit 0
+            ;;
+        -t | --template)
+            template="$2"
+            shift 2
+            ;;
+        -d | --desc)
+            description="$2"
+            shift 2
+            ;;
+        -a | --author)
+            author="$2"
+            shift 2
+            ;;
+        -l | --license)
+            license="$2"
+            shift 2
+            ;;
+        --git)
+            init_git=true
+            shift
+            ;;
+        --install)
+            install=true
+            shift
+            ;;
+        --no-deps)
+            install=false
+            shift
+            ;;
+        -f | --force)
+            force=true
+            shift
+            ;;
+        -y | --yes)
+            skip_confirm=true
+            shift
+            ;;
+        *)
+            if [ -z "$type" ]; then
+                type="$1"
+            elif [ -z "$name" ]; then
+                name="$1"
+            elif [ -z "$directory" ]; then
+                directory="$1"
+            else
+                echo "Error: Unexpected argument: $1" >&2
+                show_init_help
+                exit 1
+            fi
+            shift
+            ;;
+        esac
+    done
+
+    # 验证必要参数
+    if [ -z "$type" ] || [ -z "$name" ]; then
+        echo "Error: Missing required arguments" >&2
+        show_init_help
+        exit 1
+    fi
+
+    # 如果未指定目录，使用项目名
+    if [ -z "$directory" ]; then
+        directory="./$name"
+    fi
+
+    # 检查目录是否存在
+    if [ -d "$directory" ] && [ "$force" != true ]; then
+        echo "Error: Directory already exists: $directory" >&2
+        echo "Use --force to overwrite" >&2
+        exit 1
+    fi
+
+    # 收集项目信息
+    eval "$(collect_project_info "$name" "$description" "$author" "$license")"
+
+    # 确认创建
+    if [ "$skip_confirm" != true ]; then
+        echo "About to create project with following settings:"
+        echo "  Type: $type"
+        echo "  Template: $template"
+        echo "  Name: $name"
+        echo "  Description: $description"
+        echo "  Author: $author"
+        echo "  License: $license"
+        echo "  Directory: $directory"
+        echo
+        read -p "Continue? [Y/n] " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]] && [[ ! -z $REPLY ]]; then
+            echo "Aborted"
+            exit 1
+        fi
+    fi
+
+    # 创建项目
+    if apply_template "project" "${type}/${template}" "$directory"; then
+        echo "Project initialized successfully!"
+        echo "Next steps:"
+        echo "  cd $directory"
+        echo "✅ Project created successfully"
+
+        # 初始化git
+        if [ "$init_git" = true ]; then
+            init_git "$directory" "$type" "$template"
+            echo "✅ Git repository initialized"
+        fi
+
+        # 安装依赖
+        if [ "$install" = true ]; then
+            install_dependencies "$directory"
+            echo "✅ Dependencies installed"
+        fi
+
+        # 打开编辑器
+        if [ -n "$EDITOR" ]; then
+            $EDITOR "$directory"
+        fi
+
+        echo
+        echo "🎉 Done! Get started with:"
+        echo "  cd $directory"
+    else
+        echo "Failed to initialize project"
+        exit 1
+    fi
+}
+
+main "$@"

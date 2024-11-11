@@ -1,0 +1,51 @@
+{
+	"name": "thor-cli",
+	"version": "0.1.0",
+	"description": "Template Handler & Organizer - A powerful project scaffolding tool",
+	"author": "Thor Team",
+	"license": "MIT",
+	"main": "bin/thor",
+	"bin": {
+		"thor": "bin/thor"
+	},
+	"files": [
+		"bin",
+		"lib",
+		"completions",
+		"share"
+	],
+	"scripts": {
+		"build": "make build",
+		"test": "make test",
+		"lint": "make lint",
+		"install": "make install",
+		"uninstall": "make uninstall"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/chenxingqiang/thor.git"
+	},
+	"keywords": [
+		"cli",
+		"template",
+		"scaffold",
+		"generator",
+		"project",
+		"thor"
+	],
+	"bugs": {
+		"url": "https://github.com/chenxingqiang/thor/issues"
+	},
+	"homepage": "https://github.com/chenxingqiang/thor#readme",
+	"engines": {
+		"node": ">=14.0.0"
+	},
+	"os": [
+		"darwin",
+		"linux"
+	],
+	"dependencies": {},
+	"devDependencies": {
+		"shellcheck": "^1.0.0"
+	}
+}

@@ -1,0 +1,53 @@
+{
+  "name": "react",
+  "type": "project",
+  "description": "React project template with TypeScript and Tailwind CSS",
+  "version": "1.0.0",
+  "author": "Thor Team",
+  "license": "MIT",
+  "tags": ["react", "typescript", "tailwind"],
+  "dependencies": {
+    "required": ["node >= 14"],
+    "recommended": ["pnpm >= 7"]
+  },
+  "variables": {
+    "name": {
+      "description": "Project name",
+      "required": true,
+      "pattern": "^[a-zA-Z][a-zA-Z0-9-]*$"
+    },
+    "description": {
+      "description": "Project description",
+      "default": "A React project created with Thor"
+    },
+    "author": {
+      "description": "Project author",
+      "default": "${GIT_USER_NAME}"
+    },
+    "version": {
+      "description": "Project version",
+      "default": "0.1.0"
+    }
+  },
+  "files": {
+    "ignore": [
+      "node_modules",
+      "dist",
+      ".DS_Store"
+    ],
+    "rename": {
+      "gitignore": ".gitignore",
+      "env.example": ".env"
+    }
+  },
+  "hooks": {
+    "pre-scaffold": "pre-scaffold.sh",
+    "post-scaffold": "post-scaffold.sh"
+  },
+  "scripts": {
+    "setup": "pnpm install",
+    "start": "pnpm dev",
+    "build": "pnpm build",
+    "test": "pnpm test"
+  }
+}

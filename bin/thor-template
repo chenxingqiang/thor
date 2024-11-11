@@ -1,0 +1,245 @@
+#!/usr/bin/env bash
+# Template management command
+
+source "${THOR_ROOT}/lib/core/config.sh"
+source "${THOR_ROOT}/lib/core/template.sh"
+source "${THOR_ROOT}/lib/core/utils.sh"
+
+show_template_help() {
+    echo "Usage: thor template <command> [options]"
+    echo
+    echo "Template management commands"
+    echo
+    echo "Commands:"
+    echo "  list              List all available templates"
+    echo "  create [name]     Create a new template"
+    echo "  install [source]  Install template from source"
+    echo "  remove [name]     Remove template"
+    echo "  update [name]     Update template"
+    echo
+    echo "Options:"
+    echo "  -t, --type        Template type (project/component/git)"
+    echo "  -d, --desc        Template description"
+    echo "  -f, --force       Force operation"
+    echo "  --global          Operate on global templates"
+    echo
+    echo "Examples:"
+    echo "  thor template list"
+    echo "  thor template create my-react -t project"
+    echo "  thor template install https://github.com/user/template"
+    echo "  thor template remove my-react"
+}
+
+# 列出模板
+cmd_list() {
+    local type=""
+    local global=false
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+        -t | --type)
+            type="$2"
+            shift 2
+            ;;
+        --global)
+            global=true
+            shift
+            ;;
+        *)
+            shift
+            ;;
+        esac
+    done
+
+    # 显示模板列表
+    if $global; then
+        list_templates "$type" "$THOR_TEMPLATE_DIR"
+    else
+        list_templates "$type" ".thor/templates"
+    fi
+}
+
+# 创建新模板
+cmd_create() {
+    local name=""
+    local type="project"
+    local desc=""
+    local force=false
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+        -t | --type)
+            type="$2"
+            shift 2
+            ;;
+        -d | --desc)
+            desc="$2"
+            shift 2
+            ;;
+        -f | --force)
+            force=true
+            shift
+            ;;
+        *)
+            if [ -z "$name" ]; then
+                name="$1"
+            fi
+            shift
+            ;;
+        esac
+    done
+
+    if [ -z "$name" ]; then
+        log_error "Template name is required"
+        show_template_help
+        exit 1
+    fi
+
+    create_template "$type" "$name" "$desc"
+}
+
+# 安装模板
+cmd_install() {
+    local source=""
+    local type="project"
+    local name=""
+    local force=false
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+        -t | --type)
+            type="$2"
+            shift 2
+            ;;
+        -n | --name)
+            name="$2"
+            shift 2
+            ;;
+        -f | --force)
+            force=true
+            shift
+            ;;
+        *)
+            if [ -z "$source" ]; then
+                source="$1"
+            fi
+            shift
+            ;;
+        esac
+    done
+
+    if [ -z "$source" ]; then
+        log_error "Template source is required"
+        show_template_help
+        exit 1
+    fi
+
+    # 如果没有指定名称，从源URL提取
+    if [ -z "$name" ] && [[ "$source" =~ ^https?:// ]]; then
+        name=$(basename "$source" .git)
+    fi
+
+    install_template "$source" "$type" "$name"
+}
+
+# 删除模板
+cmd_remove() {
+    local name=""
+    local type="project"
+    local force=false
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+        -t | --type)
+            type="$2"
+            shift 2
+            ;;
+        -f | --force)
+            force=true
+            shift
+            ;;
+        *)
+            if [ -z "$name" ]; then
+                name="$1"
+            fi
+            shift
+            ;;
+        esac
+    done
+
+    if [ -z "$name" ]; then
+        log_error "Template name is required"
+        show_template_help
+        exit 1
+    fi
+
+    remove_template "$type" "$name"
+}
+
+# 更新模板
+cmd_update() {
+    local name=""
+    local type="project"
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+        -t | --type)
+            type="$2"
+            shift 2
+            ;;
+        *)
+            if [ -z "$name" ]; then
+                name="$1"
+            fi
+            shift
+            ;;
+        esac
+    done
+
+    # 如果没有指定名称，更新所有模板
+    if [ -z "$name" ]; then
+        update_all_templates
+    else
+        update_template "$type" "$name"
+    fi
+}
+
+main() {
+    if [ $# -eq 0 ]; then
+        show_template_help
+        exit 1
+    fi
+
+    case "$1" in
+    list)
+        shift
+        cmd_list "$@"
+        ;;
+    create)
+        shift
+        cmd_create "$@"
+        ;;
+    install)
+        shift
+        cmd_install "$@"
+        ;;
+    remove)
+        shift
+        cmd_remove "$@"
+        ;;
+    update)
+        shift
+        cmd_update "$@"
+        ;;
+    -h | --help)
+        show_template_help
+        ;;
+    *)
+        log_error "Unknown command: $1"
+        show_template_help
+        exit 1
+        ;;
+    esac
+}
+
+main "$@"

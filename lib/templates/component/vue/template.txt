@@ -1,0 +1,89 @@
+<template>
+  <div
+    :class="[
+      'component-{{name}}',
+      `component-{{name}}--${variant}`,
+      `component-{{name}}--${size}`,
+      className
+    ]"
+    :data-testid="testId"
+    @click="handleClick"
+  >
+    <slot>{{ text }}</slot>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import type { PropType } from 'vue'
+
+export interface {{name}}Props {
+  /** Component text content */
+  text?: string
+  /** Additional class name */
+  className?: string
+  /** Component variant */
+  variant?: 'default' | 'primary' | 'secondary'
+  /** Component size */
+  size?: 'small' | 'medium' | 'large'
+  /** Test ID for component */
+  testId?: string
+}
+
+// Define props with validation
+const props = withDefaults(defineProps<{{name}}Props>(), {
+  text: '',
+  className: '',
+  variant: 'default',
+  size: 'medium',
+  testId: 'component-{{name}}'
+})
+
+// Define emits
+const emit = defineEmits<{
+  (e: 'click', event: MouseEvent): void
+}>()
+
+// Computed properties
+const classes = computed(() => [
+  'component-{{name}}',
+  `component-{{name}}--${props.variant}`,
+  `component-{{name}}--${props.size}`,
+  props.className
+])
+
+// Event handlers
+const handleClick = (event: MouseEvent) => {
+  emit('click', event)
+}
+</script>
+
+<style scoped>
+.component-{{name}} {
+  @apply relative flex items-center justify-center transition-all duration-200;
+}
+
+.component-{{name}}--default {
+  @apply bg-white text-gray-900 hover:bg-gray-50;
+}
+
+.component-{{name}}--primary {
+  @apply bg-blue-600 text-white hover:bg-blue-700;
+}
+
+.component-{{name}}--secondary {
+  @apply bg-gray-200 text-gray-900 hover:bg-gray-300;
+}
+
+.component-{{name}}--small {
+  @apply px-3 py-1 text-sm rounded-md;
+}
+
+.component-{{name}}--medium {
+  @apply px-4 py-2 text-base rounded-lg;
+}
+
+.component-{{name}}--large {
+  @apply px-6 py-3 text-lg rounded-xl;
+}
+</style>

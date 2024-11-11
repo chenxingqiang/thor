@@ -1,0 +1,71 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { mount } from '@vue/test-utils'
+import { createTestingPinia } from '@pinia/testing'
+
+describe('{{name}}', () => {
+  // Test setup
+  beforeEach(() => {
+    // Setup code
+  })
+
+  afterEach(() => {
+    // Cleanup code
+    vi.clearAllMocks()
+  })
+
+  // Test cases
+  it('renders correctly', () => {
+    // Arrange
+    const wrapper = mount(Component, {
+      props: {
+        // Test props
+      },
+      global: {
+        plugins: [
+          createTestingPinia({
+            createSpy: vi.fn
+          })
+        ]
+      }
+    })
+
+    // Assert
+    expect(wrapper.html()).toMatchSnapshot()
+  })
+
+  it('handles user interaction', async () => {
+    // Arrange
+    const wrapper = mount(Component)
+    const button = wrapper.find('button')
+
+    // Act
+    await button.trigger('click')
+
+    // Assert
+    expect(wrapper.emitted('click')).toBeTruthy()
+  })
+
+  it('manages state correctly', () => {
+    // Arrange
+    const store = useStore()
+
+    // Act
+    store.increment()
+
+    // Assert
+    expect(store.count).toBe(1)
+  })
+
+  it('handles async operations', async () => {
+    // Arrange
+    const mockApi = vi.fn()
+    mockApi.mockResolvedValue({ data: 'test' })
+
+    // Act
+    const result = await performOperation()
+
+    // Assert
+    expect(result).toBe('test')
+    expect(mockApi).toHaveBeenCalled()
+  })
+})

@@ -1,0 +1,83 @@
+# Thor Examples
+
+## Basic Usage
+
+### Create a React Project
+```bash
+# Create a new React project
+thor init react my-app
+
+# Change directory
+cd my-app
+
+# Create a new component
+thor create component Button.tsx
+
+# Add .gitignore
+thor git ignore node
+
+# Initialize git
+thor git init
+```
+
+### Create a Next.js Blog
+```bash
+# Create a new Next.js project
+thor init next my-blog --template blog
+
+# Add authentication
+thor add auth --provider auth0
+
+# Add database
+thor add database --type postgres
+```
+
+### Create a Vue Dashboard
+```bash
+# Create a new Vue project
+thor init vue admin-dashboard
+
+# Add components
+thor create component DataTable.vue
+thor create component Chart.vue
+
+# Add routing
+thor add route dashboard --layout admin
+```
+
+## Advanced Usage
+
+### Custom Templates
+```bash
+# Create a custom template
+thor template create my-template
+
+# Install from repository
+thor template install https://github.com/user/template
+
+# Use custom template
+thor create component Header.tsx --template my-template
+```
+
+### Batch Operations
+```bash
+# Create multiple components
+echo "Header Footer Sidebar Nav" | xargs -n1 thor create component
+
+# Add multiple routes
+echo "home about contact" | xargs -n1 thor add route
+```
+
+### CI/CD Setup
+```bash
+# Initialize GitHub Actions
+thor ci init
+
+# Add deployment workflow
+thor ci add deploy --platform vercel
+
+# Add testing workflow
+thor ci add test --coverage
+```
+
+See more examples in our [documentation](https://thor.dev/examples).

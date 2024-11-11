@@ -1,0 +1,87 @@
+# CI configuration
+name: Thor CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies (Ubuntu)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bash jq git tree
+
+    - name: Install dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew install bash jq git tree
+
+    - name: Run tests
+      run: |
+        bash tests/run_tests.sh
+
+    - name: Build package
+      run: |
+        bash scripts/build.sh
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: thor-${{ runner.os }}
+        path: dist/
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v2
+
+    - name: Calculate checksums
+      run: |
+        cd dist
+        sha256sum * > checksums.txt
+
+    - name: Update Homebrew formula
+      run: |
+        export THOR_VERSION="${GITHUB_REF#refs/tags/v}"
+        export THOR_SHA256=$(sha256sum dist/thor-${THOR_VERSION}.tar.gz | cut -d' ' -f1)
+
+        sed -i "s/version \".*\"/version \"$THOR_VERSION\"/" Formula/thor.rb
+        sed -i "s/sha256 \".*\"/sha256 \"$THOR_SHA256\"/" Formula/thor.rb
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "chore: update formula for version ${{ github.ref }}"
+        title: "chore: update formula for version ${{ github.ref }}"
+        body: "Updates the Homebrew formula for the latest release"
+        branch: update-formula
+        base: main
+
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

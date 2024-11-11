@@ -1,0 +1,85 @@
+# React component template
+import { type ReactElement } from 'react';
+
+interface {{name}}Props {
+  /** Component description */
+  children?: React.ReactNode;
+  /** Additional class name */
+  className?: string;
+  /** Component variant */
+  variant?: 'default' | 'primary' | 'secondary';
+  /** Component size */
+  size?: 'small' | 'medium' | 'large';
+  /** Click handler */
+  onClick?: () => void;
+}
+
+/**
+ * {{name}} component.
+ *
+ * @example
+ * ```tsx
+ * <{{name}} variant="primary" size="medium">
+ *   Click me
+ * </{{name}}>
+ * ```
+ */
+export default function {{name}}({
+  children,
+  className = '',
+  variant = 'default',
+  size = 'medium',
+  onClick
+}: {{name}}Props): ReactElement {
+  // Compute classes based on props
+  const classes = [
+    'component-{{name}}',
+    `component-{{name}}--${variant}`,
+    `component-{{name}}--${size}`,
+    className
+  ].filter(Boolean).join(' ');
+
+  return (
+    <div
+      className={classes}
+      onClick={onClick}
+      data-testid="{{name}}"
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Component styles.
+ * @note Add these to your CSS/SCSS file
+ */
+/*
+.component-{{name}} {
+  @apply relative flex items-center justify-center;
+}
+
+.component-{{name}}--default {
+  @apply bg-white text-gray-900;
+}
+
+.component-{{name}}--primary {
+  @apply bg-blue-600 text-white;
+}
+
+.component-{{name}}--secondary {
+  @apply bg-gray-200 text-gray-900;
+}
+
+.component-{{name}}--small {
+  @apply px-3 py-1 text-sm;
+}
+
+.component-{{name}}--medium {
+  @apply px-4 py-2 text-base;
+}
+
+.component-{{name}}--large {
+  @apply px-6 py-3 text-lg;
+}
+*/

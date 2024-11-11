@@ -1,0 +1,7 @@
+--require spec_helper
+--shell bash
+--format documentation
+--color
+--random none
+--fail-fast
+--timeout 10

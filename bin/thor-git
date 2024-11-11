@@ -1,0 +1,205 @@
+#!/usr/bin/env bash
+# Git-related commands (e.g., gitignore generation)
+
+source "${THOR_ROOT}/lib/core/config.sh"
+source "${THOR_ROOT}/lib/core/utils.sh"
+
+show_git_help() {
+    echo "Usage: thor git <command> [options]"
+    echo
+    echo "Git related utilities"
+    echo
+    echo "Commands:"
+    echo "  ignore    Generate .gitignore file"
+    echo "  init      Initialize git repository with templates"
+    echo "  clean     Clean git repository"
+    echo
+    echo "Options:"
+    echo "  -t, --template <template>    Specify gitignore template"
+    echo "  -a, --add                    Add templates to existing .gitignore"
+    echo "  -f, --force                  Force overwrite"
+    echo "  --list                       List available templates"
+    echo
+    echo "Examples:"
+    echo "  thor git ignore node"
+    echo "  thor git ignore python,venv --add"
+    echo "  thor git init --template full-stack"
+}
+
+# 获取gitignore模板内容
+get_gitignore_content() {
+    local template="$1"
+    local api_url="https://api.github.com/gitignore/templates/$template"
+
+    # 先检查缓存
+    local cache_file="${THOR_CACHE_DIR}/gitignore/${template}"
+    if [ -f "$cache_file" ] && [ $(($(date +%s) - $(stat -f %m "$cache_file" 2>/dev/null || stat -c %Y "$cache_file"))) -lt 86400 ]; then
+        cat "$cache_file"
+        return 0
+    fi
+
+    # 从GitHub API获取
+    local content
+    if content=$(curl -sS "$api_url" | jq -r '.source // empty'); then
+        mkdir -p "${THOR_CACHE_DIR}/gitignore"
+        echo "$content" >"$cache_file"
+        echo "$content"
+        return 0
+    fi
+
+    return 1
+}
+
+# 生成gitignore文件
+generate_gitignore() {
+    local templates=()
+    local add=false
+    local force=false
+    local output=".gitignore"
+
+    # 解析参数
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+        -t | --template)
+            IFS=',' read -ra templates <<<"$2"
+            shift 2
+            ;;
+        -a | --add)
+            add=true
+            shift
+            ;;
+        -f | --force)
+            force=true
+            shift
+            ;;
+        -o | --output)
+            output="$2"
+            shift 2
+            ;;
+        *)
+            if [ ${#templates[@]} -eq 0 ]; then
+                IFS=',' read -ra templates <<<"$1"
+            fi
+            shift
+            ;;
+        esac
+    done
+
+    # 检查现有文件
+    if [ -f "$output" ] && [ "$force" != true ] && [ "$add" != true ]; then
+        echo "Error: .gitignore already exists. Use --force to overwrite or --add to append." >&2
+        return 1
+    fi
+
+    # 创建临时文件
+    local temp_file=$(mktemp)
+
+    # 如果是追加模式，复制现有内容
+    if [ "$add" = true ] && [ -f "$output" ]; then
+        cat "$output" >"$temp_file"
+        echo "" >>"$temp_file"
+    fi
+
+    # 添加每个模板的内容
+    for template in "${templates[@]}"; do
+        echo "# Template: $template" >>"$temp_file"
+        if content=$(get_gitignore_content "$template"); then
+            echo "$content" >>"$temp_file"
+            echo "" >>"$temp_file"
+        else
+            echo "Warning: Could not fetch template: $template" >&2
+        fi
+    done
+
+    # 移动到目标位置
+    mv "$temp_file" "$output"
+    echo "✅ Generated .gitignore file with templates: ${templates[*]}"
+}
+
+# 初始化git仓库
+init_git_repo() {
+    local template="$1"
+    local force=false
+
+    # 检查是否已经是git仓库
+    if [ -d ".git" ] && [ "$force" != true ]; then
+        echo "Error: Git repository already exists" >&2
+        return 1
+    fi
+
+    # 初始化仓库
+    git init
+
+    # 应用gitignore模板
+    if [ -n "$template" ]; then
+        generate_gitignore "$template"
+    fi
+
+    # 创建初始提交
+    git add .
+    git commit -m "Initial commit by thor"
+
+    echo "✅ Git repository initialized"
+}
+
+# 清理git仓库
+clean_git_repo() {
+    local force=false
+
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+        -f | --force)
+            force=true
+            shift
+            ;;
+        *)
+            shift
+            ;;
+        esac
+    done
+
+    # 确认
+    if [ "$force" != true ]; then
+        echo "This will remove all untracked files and directories. Continue? [y/N]"
+        read -r response
+        if [[ ! "$response" =~ ^[Yy]$ ]]; then
+            return 1
+        fi
+    fi
+
+    # 清理
+    git clean -fd
+    echo "✅ Git repository cleaned"
+}
+
+main() {
+    if [ $# -eq 0 ]; then
+        show_git_help
+        exit 1
+    fi
+
+    case "$1" in
+    ignore)
+        shift
+        generate_gitignore "$@"
+        ;;
+    init)
+        shift
+        init_git_repo "$@"
+        ;;
+    clean)
+        shift
+        clean_git_repo "$@"
+        ;;
+    -h | --help)
+        show_git_help
+        ;;
+    *)
+        echo "Error: Unknown command: $1" >&2
+        show_git_help
+        exit 1
+        ;;
+    esac
+}
+
+main "$@"

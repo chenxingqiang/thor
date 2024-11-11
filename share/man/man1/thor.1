@@ -1,0 +1,96 @@
+# man page documentation
+.TH THOR 1 "November 2024" "thor 0.1.0" "Thor Manual"
+
+.SH NAME
+thor \- Template Handler & Organizer
+
+.SH SYNOPSIS
+.B thor
+[ \fICOMMAND\fR ] [ \fIOPTIONS\fR ]
+
+.SH DESCRIPTION
+.B thor
+is a powerful project scaffolding tool that helps developers quickly create and manage project templates.
+
+.SH COMMANDS
+.TP
+.BR init " [type] [name]"
+Initialize a new project of the specified type.
+
+.TP
+.BR template " {list|create|install|remove|update}"
+Manage project templates.
+
+.TP
+.BR git " {ignore|init|clean}"
+Git-related utilities.
+
+.TP
+.BR create " [path]"
+Create files from templates.
+
+.SH OPTIONS
+.TP
+.BR \-h ", " \-\-help
+Show help message.
+
+.TP
+.BR \-v ", " \-\-version
+Show version information.
+
+.TP
+.BR \-t ", " \-\-template =\fITEMPLATE\fR
+Specify template to use.
+
+.TP
+.BR \-f ", " \-\-force
+Force operation.
+
+.SH EXAMPLES
+.TP
+Create a new React project:
+.B thor init react my-app
+
+.TP
+Create a new component:
+.B thor create src/components/Button.tsx \-t react
+
+.TP
+Generate .gitignore:
+.B thor git ignore node
+
+.SH CONFIGURATION
+Configuration file is located at:
+.I ~/.config/thor/config
+
+.SH FILES
+.TP
+.I ~/.config/thor/config
+User configuration file
+
+.TP
+.I ~/.local/share/thor/templates
+User template directory
+
+.SH ENVIRONMENT
+.TP
+.B THOR_CONFIG_HOME
+Override default config directory
+
+.TP
+.B THOR_TEMPLATE_DIR
+Override default template directory
+
+.SH SEE ALSO
+.BR git (1),
+.BR npm (1)
+
+.SH BUGS
+Report bugs at: https://github.com/chenxingqiang/thor/issues
+
+.SH AUTHOR
+Thor Team <https://github.com/chenxingqiang/thor>
+
+.SH COPYRIGHT
+Copyright (C) 2024 Thor Team.
+This is free software: you can redistribute it and/or modify it under the terms of the MIT License.
